@@ -73,6 +73,8 @@ class ParticleFilter:
 
         # inialize our map
         self.map = OccupancyGrid()
+        print("MAP:\n")
+        print(self.map)
 
         # the number of particles used in the particle filter
         self.num_particles = 10000
@@ -135,6 +137,7 @@ class ParticleFilter:
         # make all the particle weights sum to 1.0
         
         # TODO
+        return False
 
 
 
@@ -164,7 +167,7 @@ class ParticleFilter:
     def resample_particles(self):
 
         # TODO
-
+        return False
 
 
     def robot_scan_received(self, data):
@@ -243,12 +246,14 @@ class ParticleFilter:
         # based on the particles within the particle cloud, update the robot pose estimate
         
         # TODO
+        return False
 
 
     
     def update_particle_weights_with_measurement_model(self, data):
 
         # TODO
+        return False
 
 
         
@@ -259,6 +264,7 @@ class ParticleFilter:
         # all of the particles correspondingly
 
         # TODO
+        return False
 
 
 
