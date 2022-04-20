@@ -13,7 +13,7 @@ from tf import TransformBroadcaster
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
 import numpy as np
-from numpy.random import random_sample
+from numpy.random import random_sample, choice
 import math
 
 from random import randint, random
@@ -226,8 +226,10 @@ class ParticleFilter:
     def resample_particles(self):
 
         # TODO
-        return False
 
+        probs = [particle.w for particle in self.particle_cloud]
+
+        self.particle_cloud = choice(self.num_particles, self.num_particles, probs)
 
     def robot_scan_received(self, data):
 
