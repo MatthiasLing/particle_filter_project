@@ -175,7 +175,9 @@ class ParticleFilter:
 
             angle = randint(0,360) * math.pi/180
 
-            pose = Pose(position = Quaternion(row, col, 0, angle))
+            # position.x, y, etc
+            position = Point(row, col, 0)
+            pose = Pose(position = position, orientation = quaternion_from_euler(0, 0, angle))
             particle = Particle(pose, weight)
 
             self.particle_cloud.append(particle)
@@ -346,7 +348,7 @@ class ParticleFilter:
                     particle.w = q
                     self.particle_cloud[index] = particle
 
-
+        self.normalize_particles()
         
 
     def update_particles_with_motion_model(self):
