@@ -20,6 +20,16 @@ from random import randint, random
 
 import random
 
+from likelihood_field import LikelihoodField
+
+# Using the code from class!
+def compute_prob_zero_centered_gaussian(dist, sd):
+    """ Takes in distance from zero (dist) and standard deviation (sd) for gaussian
+        and returns probability (likelihood) of observation """
+    c = 1.0 / (sd * math.sqrt(2 * math.pi))
+    prob = c * math.exp((-math.pow(dist,2))/(2 * math.pow(sd, 2)))
+    return prob
+
 def get_yaw_from_pose(p):
     """ A helper function that takes in a Pose object (geometry_msgs) and returns yaw"""
 
@@ -58,6 +68,8 @@ class ParticleFilter:
 
     def __init__(self):
 
+        self.noise = 0
+
         # once everything is setup initialized will be set to true
         self.initialized = False        
 
@@ -76,7 +88,8 @@ class ParticleFilter:
         self.map = OccupancyGrid()
 
         # the number of particles used in the particle filter
-        self.num_particles = 10000
+        self.num_particles = 1000
+        # 10000
 
         # initialize the particle cloud array
         self.particle_cloud = []
@@ -136,17 +149,11 @@ class ParticleFilter:
 
         '''
         
-            1. assume origin at top left
-            2. Iterate down, L->R, adding resolution to each cell 
-            3. Right now there are 
-                ~3000 cells with 0 in data
-                ~143,000 cells with -1
-                ~900 cells with 100 or something else
-            4. Add all of the 3000 cells with 0 into the cloud,
-                then select random 7000 from the 143,000
-
-            5. For each particle, initialize with x and y, everything else 0
-            6. At the end, initialize quaternion to the robot's orientation
+            1. Set particle cloud to length 1000 to start
+            2. Randomly select row, col from range (0,384) each
+            3. initialize particle with row*resolution, col*resolution
+            4. set weight to 1/num_particles
+            5. Add to cloud
         
         
         '''
@@ -156,40 +163,22 @@ class ParticleFilter:
 
         print(res, dim)
 
-        temp = []
+        res = self.map.info.resolution
+        dim = self.map.info.width
 
-        for row in range(dim):
-            for col in range(dim):
+        print(res, dim)
 
-                index = row*col
+        for i in range(self.num_particles):
+            row = randint(0,dim) * res
+            col = randint(0,dim) * res
+            weight = 1/self.num_particles
 
-                pose = Pose(position = Point(row * res, col * res, 0))
-                particle = Particle(pose, 0)
+            angle = randint(0,360) * math.pi/180
 
-                if not (row % 10) and not col:
-                    print(row)
+            pose = Pose(position = Quaternion(row, col, 0, angle))
+            particle = Particle(pose, weight)
 
-                if self.map.data[index] == 0:
-                    self.particle_cloud.append(particle)
-                elif self.map.data[index] <0:
-                    temp.append(particle)
-
-        temp1 = random.sample(temp, self.num_particles - len(self.particle_cloud))
-        self.particle_cloud += temp1
-
-
-        # z = u = o = 0
-
-        # for i in self.map.data:
-        #     if i == -1:
-        #         u += 1
-        #     elif i == 0:
-        #         z += 1
-        #     else:
-        #         o += 1
-        # print(z, u , o)
-        print(len(self.particle_cloud))
-        print(self.particle_cloud[:10])
+            self.particle_cloud.append(particle)
 
 
         self.normalize_particles()
@@ -323,7 +312,37 @@ class ParticleFilter:
     def update_particle_weights_with_measurement_model(self, data):
 
         # TODO
-        return False
+        def to_rad(angle):
+            return angle * math.pi / 180
+
+        for index, particle in enumerate(self.particle_cloud):
+            for angle in enumerate(data.ranges):
+                
+                measurement = data.ranges[angle]
+
+                q = 1
+                x,y = particle.pose.orientation.x, particle.pose.orientation.y
+                theta = euler_from_quaternion([
+                    particle.pose.orientation.x, 
+                    particle.pose.orientation.y, 
+                    particle.pose.orientation.z, 
+                    particle.pose.orientation.w])[2]
+
+                if measurement:
+
+                    angle = to_rad(angle)
+
+                    x = x + measurement * math.cos(theta + angle)
+                    y = y + measurement * math.sin(theta + angle)
+
+                    lhf = LikelihoodField()
+
+                    dist = lhf.get_closest_obstacle_distance(x,y)
+
+                    q = q * compute_prob_zero_centered_gaussian(dist, 0.1)
+
+                    particle.w = q
+                    self.particle_cloud[index] = particle
 
 
         
@@ -333,9 +352,38 @@ class ParticleFilter:
         # based on the how the robot has moved (calculated from its odometry), we'll  move
         # all of the particles correspondingly
 
-        # TODO
-        return False
+        '''
+        
+        Using sample_motion_odometry function from slack
+        - starting with 0 noise
+    
+        
+        '''
 
+        # TODO
+
+        curr_x = self.odom_pose.pose.position.x
+        old_x = self.odom_pose_last_motion_update.pose.position.x
+        curr_y = self.odom_pose.pose.position.y
+        old_y = self.odom_pose_last_motion_update.pose.position.y
+        curr_yaw = get_yaw_from_pose(self.odom_pose.pose)
+        old_yaw = get_yaw_from_pose(self.odom_pose_last_motion_update.pose)
+        
+        ## TODO : add noise for these three
+        angle1 = np.arctan([old_y - curr_y, old_x - curr_x]) - old_yaw 
+        trans = math.sqrt((old_x - curr_x)**2 + (old_y-curr_y)**2) 
+        angle2 = curr_yaw - old_yaw - angle1 
+
+        for index, particle in self.particle_cloud:
+
+            yaw = get_yaw_from_pose(particle.pose)
+            particle.pose.x += trans * math.cos(yaw + angle1)
+
+            particle.pose.y += trans * math.sin(yaw + angle1)
+
+            particle.pose.yaw += (angle1 + angle2)
+        
+            self.particle_cloud[index] = particle
 
 
 if __name__=="__main__":
