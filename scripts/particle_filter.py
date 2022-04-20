@@ -132,7 +132,7 @@ class ParticleFilter:
 
     def initialize_particle_cloud(self):
         
-        # TODO
+        # [ x ] TODO
 
         '''
         
@@ -200,8 +200,14 @@ class ParticleFilter:
     def normalize_particles(self):
         # make all the particle weights sum to 1.0
         
-        # TODO
-        return False
+        # [ x ] TODO
+        total = 0
+        for particle in self.particle_cloud:
+            total += particle.w
+
+        for index, particle in self.particle_cloud:
+            self.particle_cloud[index].w = particle.w / total 
+        
 
 
 
