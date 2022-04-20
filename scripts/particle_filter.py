@@ -18,7 +18,7 @@ import math
 
 from random import randint, random
 
-
+import random
 
 def get_yaw_from_pose(p):
     """ A helper function that takes in a Pose object (geometry_msgs) and returns yaw"""
@@ -71,10 +71,9 @@ class ParticleFilter:
         self.odom_frame = "odom"
         self.scan_topic = "scan"
 
+
         # inialize our map
         self.map = OccupancyGrid()
-        print("MAP:\n")
-        print(self.map)
 
         # the number of particles used in the particle filter
         self.num_particles = 10000
@@ -110,11 +109,19 @@ class ParticleFilter:
         self.tf_listener = TransformListener()
         self.tf_broadcaster = TransformBroadcaster()
 
+        
+        rospy.sleep(5)
 
         # intialize the particle cloud
         self.initialize_particle_cloud()
 
         self.initialized = True
+
+        '''
+        
+        Assume origin is top left
+        
+        '''
 
 
 
@@ -126,6 +133,63 @@ class ParticleFilter:
     def initialize_particle_cloud(self):
         
         # TODO
+
+        '''
+        
+            1. assume origin at top left
+            2. Iterate down, L->R, adding resolution to each cell 
+            3. Right now there are 
+                ~3000 cells with 0 in data
+                ~143,000 cells with -1
+                ~900 cells with 100 or something else
+            4. Add all of the 3000 cells with 0 into the cloud,
+                then select random 7000 from the 143,000
+
+            5. For each particle, initialize with x and y, everything else 0
+            6. At the end, initialize quaternion to the robot's orientation
+        
+        
+        '''
+
+        res = self.map.info.resolution
+        dim = self.map.info.width
+
+        print(res, dim)
+
+        temp = []
+
+        for row in range(dim):
+            for col in range(dim):
+
+                index = row*col
+
+                pose = Pose(position = Point(row * res, col * res, 0))
+                particle = Particle(pose, 0)
+
+                if not (row % 10) and not col:
+                    print(row)
+
+                if self.map.data[index] == 0:
+                    self.particle_cloud.append(particle)
+                elif self.map.data[index] <0:
+                    temp.append(particle)
+
+        temp1 = random.sample(temp, self.num_particles - len(self.particle_cloud))
+        self.particle_cloud += temp1
+
+
+        # z = u = o = 0
+
+        # for i in self.map.data:
+        #     if i == -1:
+        #         u += 1
+        #     elif i == 0:
+        #         z += 1
+        #     else:
+        #         o += 1
+        # print(z, u , o)
+        print(len(self.particle_cloud))
+        print(self.particle_cloud[:10])
 
 
         self.normalize_particles()
