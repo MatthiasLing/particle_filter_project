@@ -42,6 +42,9 @@ def get_yaw_from_pose(p):
 
     return yaw
 
+def to_rad(angle):
+    return angle * math.pi / 180
+
 
 def draw_random_sample():
     """ Draws a random sample of n elements from a given list of choices and their specified probabilities.
@@ -68,7 +71,8 @@ class ParticleFilter:
 
     def __init__(self):
 
-        self.noise = 0
+        self.dist_noise = 0.05
+        self.angle_noise = to_rad(5)
 
         # once everything is setup initialized will be set to true
         self.initialized = False        
@@ -166,8 +170,6 @@ class ParticleFilter:
         res = self.map.info.resolution
         dim = self.map.info.width
 
-        print(res, dim)
-
         for i in range(self.num_particles):
             row = randint(0,dim) * res
             col = randint(0,dim) * res
@@ -199,8 +201,6 @@ class ParticleFilter:
         for index, particle in self.particle_cloud:
             self.particle_cloud[index].w = particle.w / total 
         
-
-
 
     def publish_particle_cloud(self):
 
@@ -314,11 +314,7 @@ class ParticleFilter:
 
     
     def update_particle_weights_with_measurement_model(self, data):
-
-        # TODO
-        def to_rad(angle):
-            return angle * math.pi / 180
-
+        
         for index, particle in enumerate(self.particle_cloud):
             for angle in enumerate(data.ranges):
                 
@@ -374,8 +370,8 @@ class ParticleFilter:
         old_yaw = get_yaw_from_pose(self.odom_pose_last_motion_update.pose)
         
         ## TODO : add noise for these three
-        angle1 = np.arctan([old_y - curr_y, old_x - curr_x]) - old_yaw 
-        trans = math.sqrt((old_x - curr_x)**2 + (old_y-curr_y)**2) 
+        angle1 = np.arctan([old_y - curr_y, old_x - curr_x]) - old_yaw + choice((-1,1)) * self.angle_noise
+        trans = math.sqrt((old_x - curr_x)**2 + (old_y-curr_y)**2) + choice((-1,1)) * self.dist_noise
         angle2 = curr_yaw - old_yaw - angle1 
 
         for index, particle in self.particle_cloud:
@@ -385,7 +381,7 @@ class ParticleFilter:
 
             particle.pose.y += trans * math.sin(yaw + angle1)
 
-            particle.pose.yaw += (angle1 + angle2)
+            particle.pose.yaw += (angle1 + angle2) 
         
             self.particle_cloud[index] = particle
 
