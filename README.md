@@ -9,8 +9,24 @@ The goal of this project was to guide a robot through a maze using a map of its 
 
 ### Main Steps
 
-1. e
-2. 
+1. Initialization of particle cloud
+This was done in the initialize_particle_cloud function.  
+Essentially, the function reads the dimensions of the map from the self.map and randomly chooses 10,000 coordinates based on those dimensions.  It then uses those coordinates multiplied by the resolution of the map to get physical coordinates for particles and randomly selects a yaw angle.  It then appends the particles each to the self.particle_cloud list and then normalizes and publishes it.
+
+2. Movement model
+This was done in the update_particles_with_motion_model function.
+
+3. Measurement model
+This was in the update_particle_weights_with_measurement_model function.
+
+4. Resampling
+This was done in the resample_particles function.
+
+5. Incorporation of noise
+This was done with the inclusion of noise variables in the particle filter object (self.dist_noise and self.dist_angle) as well as in the update_particles_with_motion_model function.
+
+6. Updating estimated robot pose
+7. Optimization of parameters
 
 ### Challenges
 The hardest part was starting in many ways; our UTM was corrupted and we took some time to redownload it.  Conceptually, it was hard trying to map the theoretical idea of having coordinates and particles to the code itself, pulling those particles out of the OccupancyGrid.  Additionally, figuring out of how to implement the movement model was somewhat unintuitive as we had to understand how to move the particles geometrically according to robot movement.  Finally, one of us contracted covid, so working together remotely was hard because it made UTM run extra slowly.  
@@ -22,9 +38,9 @@ Despite all this, planning ahead and scheduling time to work routinely allowed u
 The original function we wrote analyzed the values of the OccupancyGrid.data list, and categorized the information.  There were a lot of 0s and -1s, the former representing an open space and the latter being unknown.  We could have sampled all of the 0s and then randomly selected the remaining spots from the -1s, which would be faster as it would guarantee that we were looking at as many open spots as we could rather than potentially sampling invalid spaces.
 
 ### Takeaways
-We learned that writing out a plan for a large project ahead of time was helpful in scheduling time to work.  This really helped us stay ahead of the deadline and avoid any surprises the day of.
+* We learned that writing out a plan for a large project ahead of time was helpful in scheduling time to work.  This really helped us stay ahead of the deadline and avoid any surprises the day of.
 
-We also started early which allowed us to get conceptual questions out of the way and give us a lot of time for implementation.  In the future, this is helpful because a lot of the work in these projects relates to debugging and tweaking parameters, rather than conceptual concepts.
+* We also started early which allowed us to get conceptual questions out of the way and give us a lot of time for implementation.  In the future, this is helpful because a lot of the work in these projects relates to debugging and tweaking parameters, rather than conceptual concepts.
 
 ## Implementation Plan
 1. How you will initialize your particle cloud (initialize_particle_cloud)?
