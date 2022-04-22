@@ -214,15 +214,12 @@ class ParticleFilter:
         self.particles_pub.publish(particle_cloud_pose_array)
 
 
-
-
     def publish_estimated_robot_pose(self):
 
         robot_pose_estimate_stamped = PoseStamped()
         robot_pose_estimate_stamped.pose = self.robot_estimate
         robot_pose_estimate_stamped.header = Header(stamp=rospy.Time.now(), frame_id=self.map_topic)
         self.robot_estimate_pub.publish(robot_pose_estimate_stamped)
-
 
 
     def resample_particles(self):
@@ -309,7 +306,27 @@ class ParticleFilter:
         # based on the particles within the particle cloud, update the robot pose estimate
         
         # TODO
-        return False
+
+        total_row = total_col = total_angle = 0
+
+        for particle in self.particle_cloud:
+            pose = self.particle.pose
+            x = pose.position.x
+            y = pose.position.y
+            angle = euler_from_quaternion(pose.orientation)[2]
+        
+            total_row += x
+            total_col += y
+            total_angle += angle
+
+        total_row = total_row / self.num_particles
+        total_col = total_col / self.num_particles
+        total_angle = total_angle / self.num_particles
+
+        position = Point(total_row, total_col, 0)
+        pose = Pose(position = position, orientation = quaternion_from_euler(0, 0, total_angle))
+        
+        self.robot_estimate = pose
 
 
     
