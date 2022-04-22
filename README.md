@@ -1,6 +1,32 @@
 # particle_filter_project
 ## Megan Morales and Matthias Ling
 
+## Writeup
+
+The goal of this project was to guide a robot through a maze using a map of its environment and scanner readings.  We achieved this goal using monte carlo particle localization to estimate the robot's position as well as a pathfinding algorithm to navigate through it.
+
+### High Level Description
+
+### Main Steps
+
+1. e
+2. 
+
+### Challenges
+The hardest part was starting in many ways; our UTM was corrupted and we took some time to redownload it.  Conceptually, it was hard trying to map the theoretical idea of having coordinates and particles to the code itself, pulling those particles out of the OccupancyGrid.  Additionally, figuring out of how to implement the movement model was somewhat unintuitive as we had to understand how to move the particles geometrically according to robot movement.  Finally, one of us contracted covid, so working together remotely was hard because it made UTM run extra slowly.  
+
+Despite all this, planning ahead and scheduling time to work routinely allowed us to chunk out the work and also ask questions along the way.  The provided functions for the motion model and guidance we received in office hours were a helpful starting point for writing the functions out.  
+
+
+### Future Work
+The original function we wrote analyzed the values of the OccupancyGrid.data list, and categorized the information.  There were a lot of 0s and -1s, the former representing an open space and the latter being unknown.  We could have sampled all of the 0s and then randomly selected the remaining spots from the -1s, which would be faster as it would guarantee that we were looking at as many open spots as we could rather than potentially sampling invalid spaces.
+
+### Takeaways
+We learned that writing out a plan for a large project ahead of time was helpful in scheduling time to work.  This really helped us stay ahead of the deadline and avoid any surprises the day of.
+
+We also started early which allowed us to get conceptual questions out of the way and give us a lot of time for implementation.  In the future, this is helpful because a lot of the work in these projects relates to debugging and tweaking parameters, rather than conceptual concepts.
+
+## Implementation Plan
 1. How you will initialize your particle cloud (initialize_particle_cloud)?
   * Implement: For each of the 10,000 particles we'll initialize it with its position and set a weight to 0.  Then we'll append it to the particle_cloud list within the ParticleFilter class.
   * Test: To see if the array has been initialized, we'll print out the length and individual values to make sure that all 10,000 particle objects have been added.
