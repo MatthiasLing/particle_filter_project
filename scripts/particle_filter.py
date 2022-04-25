@@ -202,7 +202,7 @@ class ParticleFilter:
     
         self.normalize_particles()
         self.publish_particle_cloud()
-        print("PARTICLE CLOUD PUBLISHED\n\n")
+        print("Cloud published\n")
 
     def normalize_particles(self):
         # make all the particle weights sum to 1.0
@@ -214,7 +214,8 @@ class ParticleFilter:
 
         for index, particle in enumerate(self.particle_cloud):
             self.particle_cloud[index].w = particle.w / total 
-        
+        print("normalized\n")
+
 
     def publish_particle_cloud(self):
 
@@ -244,7 +245,7 @@ class ParticleFilter:
         probs = [particle.w for particle in self.particle_cloud]
 
         self.particle_cloud = choice(self.num_particles, self.num_particles, probs)
-        print("resampled\n\n")
+        print("resampled\n")
     def robot_scan_received(self, data):
 
         # wait until initialization is complete
@@ -347,11 +348,10 @@ class ParticleFilter:
 
     
     def update_particle_weights_with_measurement_model(self, data):
-        
         for index, particle in enumerate(self.particle_cloud):
             for angle in data.ranges:
                 
-                measurement = data.ranges[angle]
+                measurement = angle
 
                 q = 1
                 x,y = particle.pose.orientation.x, particle.pose.orientation.y
@@ -373,7 +373,7 @@ class ParticleFilter:
 
                     particle.w = q
                     self.particle_cloud[index] = particle
-
+        print("updated particles with measurement model\n")
         self.normalize_particles()
         
 
@@ -424,6 +424,7 @@ class ParticleFilter:
             particle.pose.orientation = quaternion
         
             self.particle_cloud[index] = particle
+        print("updated particles with motion model\n")
 
 
 if __name__=="__main__":
