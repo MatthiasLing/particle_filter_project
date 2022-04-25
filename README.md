@@ -3,32 +3,40 @@
 
 ## Writeup
 
-The goal of this project was to correctly develop and implement a monte carlo particle localization guide to be able to determine a robot's orientation and movement within its environment. Given a map of the robots environment, the intended purpose was to use scanner readings and different movement models to translate the posible location and movement of the robot into a probobslistic area using a particle cloud. 
+The goal of this project was to correctly develop and implement a monte carlo particle localization guide to be able to determine a robot's orientation and location within its environment. Given a map of the robots environment, the intended purpose was to use scanner readings and different movement models to translate the posible location and movement of the robot into a probobslistic area using a particle cloud. 
 
 ### High Level Description
-In order to solve the problem of particle localization we first had to identify the location of the robot. The location of the robot was found after the resampling and normalization of a particle cloud. We first initalized a large number of particles into a 2D array that represent the robot's environment. These particles contained their own position and weights which were then updated to represent the robots movement through its environment. This update was based off the difference of the distance and orientation of the robot's old position and its new position. With the odometry topic we were provided the necessary paramaters to be able to calculate these values. Eventually, the particles were resampled and the particles with the highest weights converged to reveal the robot's true position. 
+In order to solve the problem of particle localization we first had to identify the location of the robot. The location of the robot was found after the resampling and normalization of a made particle cloud. We first initalized a large number of particles into a 2D array that represent the robot's environment. These particles contained their own position and weights which were then updated to represent the robots movement through its environment. This update was based off the difference of the distance and orientation of the robot's old position and its new position. With the odometry topic we were provided the necessary paramaters to be able to calculate these values. Eventually, the particles were resampled and the particles with the highest weights converged to reveal the robot's true position. 
 
 ### Main Steps
 
 1. Initialization of particle cloud
-*This was done in the initialize_particle_cloud function.  
+- This was done in the initialize_particle_cloud function.  
 - Essentially, the function reads the dimensions of the map from the self.map and randomly chooses 10,000 coordinates based on those dimensions. It then uses those coordinates multiplied by the resolution of the map to get physical coordinates for particles and randomly selects a yaw angle.  It then appends the particles each to the self.particle_cloud list and then normalizes and publishes it.
 
 2. Movement model
-This was done in the update_particles_with_motion_model function. 
-This function updates the current particle locations x and y position as well as its yaw. It essentially uses the robots position based off its odometry. 
+- This was done in the update_particles_with_motion_model function. 
+- This function updates the current particle locations x and y position as well as its yaw. It first uses the robots old and new position, based off its odometry, to determined the angle and translation distance which the robot moves to achieve this orientation and position change. The determined angle and translation values are then used to update the particles x, y and yaw so that the particles move with the robot. 
 
 3. Measurement model
-This was in the update_particle_weights_with_measurement_model function.
+- This was in the update_particle_weights_with_measurement_model function.
+- 
 
 4. Resampling
-This was done in the resample_particles function.
+- This was done in the resample_particles function.
+- This function returns an updated particle cloud with particles that contain the highest weights. Using the random.choice() function to pick a weighted random sample of particles, we are able to update the cloud since the particles that have higher weights are the more probable to get sampled. 
+
 
 5. Incorporation of noise
-This was done with the inclusion of noise variables in the particle filter object (self.dist_noise and self.dist_angle) as well as in the update_particles_with_motion_model function.
+- This was done with the inclusion of noise variables in the particle filter object (self.dist_noise and self.dist_angle) as well as in the update_particles_with_motion_model function.
+- In order to account for noise we set an arbitrary value in randians for the angle and meters for the distance and applied it to the functions above to provide an error region for our particle cloud.  
 
 6. Updating estimated robot pose
-7. Optimization of parameters
+- This was done in the update_estimated_robot_pose function.
+- In this function we take the average position and orientation of the particles that are left in the particle cloud after resampling. We divide each individual x and y component by the total number of particles that we originated with as well doing the same with the yaw, which is converted from the pose structure. Thus, the position and yaw of the particle are then upated with these average values in order to dial down a more accurate estimate of the robots possible position. 
+ 
+8. Optimization of parameters
+- 
 
 ### Challenges
 The hardest part was starting in many ways; our UTM was corrupted and we took some time to redownload it.  Conceptually, it was hard trying to map the theoretical idea of having coordinates and particles to the code itself, pulling those particles out of the OccupancyGrid.  Additionally, figuring out of how to implement the movement model was somewhat unintuitive as we had to understand how to move the particles geometrically according to robot movement.  Finally, one of us contracted covid, so working together remotely was hard because it made UTM run extra slowly.  
