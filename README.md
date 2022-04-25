@@ -3,18 +3,19 @@
 
 ## Writeup
 
-The goal of this project was to guide a robot through a maze using a map of its environment and scanner readings.  We achieved this goal using monte carlo particle localization to estimate the robot's position as well as a pathfinding algorithm to navigate through it.
+The goal of this project was to correctly develop and implement a monte carlo particle localization guide to be able to determine a robots' orientation and movement within its environment. Given a map of the robots environment, the intended purpose was to use scanner readings and different movement models to translate the posible location and movement of the robot into a probobslistic area using a particle cloud. 
 
 ### High Level Description
-
+In order to solve the problem of particle localization we 
 ### Main Steps
 
 1. Initialization of particle cloud
 This was done in the initialize_particle_cloud function.  
-Essentially, the function reads the dimensions of the map from the self.map and randomly chooses 10,000 coordinates based on those dimensions.  It then uses those coordinates multiplied by the resolution of the map to get physical coordinates for particles and randomly selects a yaw angle.  It then appends the particles each to the self.particle_cloud list and then normalizes and publishes it.
+Essentially, the function reads the dimensions of the map from the self.map and randomly chooses 10,000 coordinates based on those dimensions. It then uses those coordinates multiplied by the resolution of the map to get physical coordinates for particles and randomly selects a yaw angle.  It then appends the particles each to the self.particle_cloud list and then normalizes and publishes it.
 
 2. Movement model
-This was done in the update_particles_with_motion_model function.
+This was done in the update_particles_with_motion_model function. 
+This function updates the current particle locations x and y position as well as its yaw. It essentially uses the robots position based off its odometry. 
 
 3. Measurement model
 This was in the update_particle_weights_with_measurement_model function.
