@@ -174,10 +174,10 @@ class ParticleFilter:
                 coords.append(i)
 
         coords_selected = draw_random_sample(coords, self.num_particles)
-
+        
         for i in coords_selected:
-            row = (i//dim) * res - origin_y
-            col = (i%dim) * res - origin_x
+            row = (i//dim) * res + origin_y
+            col = (i%dim) * res + origin_x
 
             weight = 1/self.num_particles
 
@@ -244,7 +244,7 @@ class ParticleFilter:
         probs = [particle.w for particle in self.particle_cloud]
 
         self.particle_cloud = choice(self.num_particles, self.num_particles, probs)
-
+        print("resampled\n\n")
     def robot_scan_received(self, data):
 
         # wait until initialization is complete
@@ -349,12 +349,13 @@ class ParticleFilter:
     def update_particle_weights_with_measurement_model(self, data):
         
         for index, particle in enumerate(self.particle_cloud):
-            for angle in enumerate(data.ranges):
+            for angle in data.ranges:
                 
                 measurement = data.ranges[angle]
 
                 q = 1
                 x,y = particle.pose.orientation.x, particle.pose.orientation.y
+
                 theta = get_yaw_from_pose(particle.pose)
 
                 if measurement:
@@ -399,7 +400,7 @@ class ParticleFilter:
         old_yaw = get_yaw_from_pose(self.odom_pose_last_motion_update.pose)
         
         ## TODO : add noise for these three
-        angle1 = np.arctan([old_y - curr_y, old_x - curr_x]) - old_yaw + choice((-1,1)) * self.angle_noise
+        angle1 = math.atan2(old_y - curr_y, old_x - curr_x) - old_yaw + choice((-1,1)) * self.angle_noise
         trans = math.sqrt((old_x - curr_x)**2 + (old_y-curr_y)**2) + choice((-1,1)) * self.dist_noise
         angle2 = curr_yaw - old_yaw - angle1 
 
@@ -410,7 +411,17 @@ class ParticleFilter:
 
             particle.pose.position.y += trans * math.sin(yaw + angle1)
 
-            particle.pose.yaw += (angle1 + angle2) 
+            yaw += (angle1 + angle2)
+
+            quaternion = Quaternion()
+            t = quaternion_from_euler(0, 0, yaw)
+
+            quaternion.x = t[0]
+            quaternion.y = t[1]
+            quaternion.z = t[2]
+            quaternion.w = t[3]
+
+            particle.pose.orientation = quaternion
         
             self.particle_cloud[index] = particle
 
