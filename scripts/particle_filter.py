@@ -51,6 +51,7 @@ def draw_random_sample():
     We recommend that you fill in this function using random_sample.
     """
     # TODO
+    # we ended up using the choice function from random instead
     return
 
 
@@ -165,8 +166,6 @@ class ParticleFilter:
         res = self.map.info.resolution
         dim = self.map.info.width
 
-        print(res, dim)
-
         res = self.map.info.resolution
         dim = self.map.info.width
 
@@ -179,16 +178,24 @@ class ParticleFilter:
 
             # position.x, y, etc
             position = Point(row, col, 0)
-            pose = Pose(position = position, orientation = quaternion_from_euler(0, 0, angle))
+
+            quaternion = Quaternion()
+            t = quaternion_from_euler(0, 0, angle)
+
+            quaternion.x = t[0]
+            quaternion.y = t[1]
+            quaternion.z = t[2]
+            quaternion.w = t[3]
+            pose = Pose(position = position, orientation = quaternion)
             particle = Particle(pose, weight)
 
             self.particle_cloud.append(particle)
 
-
+        print(get_yaw_from_pose( self.particle_cloud[0].pose))
+    
         self.normalize_particles()
-
         self.publish_particle_cloud()
-
+        print("PARTICLE CLOUD PUBLISHED\n\n")
 
     def normalize_particles(self):
         # make all the particle weights sum to 1.0
@@ -198,7 +205,7 @@ class ParticleFilter:
         for particle in self.particle_cloud:
             total += particle.w
 
-        for index, particle in self.particle_cloud:
+        for index, particle in enumerate(self.particle_cloud):
             self.particle_cloud[index].w = particle.w / total 
         
 
@@ -209,6 +216,7 @@ class ParticleFilter:
         particle_cloud_pose_array.poses
 
         for part in self.particle_cloud:
+
             particle_cloud_pose_array.poses.append(part.pose)
 
         self.particles_pub.publish(particle_cloud_pose_array)
@@ -310,10 +318,11 @@ class ParticleFilter:
         total_row = total_col = total_angle = 0
 
         for particle in self.particle_cloud:
-            pose = self.particle.pose
+            pose = particle.pose
             x = pose.position.x
             y = pose.position.y
-            angle = euler_from_quaternion(pose.orientation)[2]
+            
+            angle = get_yaw_from_pose(pose)
         
             total_row += x
             total_col += y
@@ -339,11 +348,7 @@ class ParticleFilter:
 
                 q = 1
                 x,y = particle.pose.orientation.x, particle.pose.orientation.y
-                theta = euler_from_quaternion([
-                    particle.pose.orientation.x, 
-                    particle.pose.orientation.y, 
-                    particle.pose.orientation.z, 
-                    particle.pose.orientation.w])[2]
+                theta = get_yaw_from_pose(particle.pose)
 
                 if measurement:
 
@@ -391,12 +396,12 @@ class ParticleFilter:
         trans = math.sqrt((old_x - curr_x)**2 + (old_y-curr_y)**2) + choice((-1,1)) * self.dist_noise
         angle2 = curr_yaw - old_yaw - angle1 
 
-        for index, particle in self.particle_cloud:
+        for index, particle in enumerate(self.particle_cloud):
 
             yaw = get_yaw_from_pose(particle.pose)
-            particle.pose.x += trans * math.cos(yaw + angle1)
+            particle.pose.position.x += trans * math.cos(yaw + angle1)
 
-            particle.pose.y += trans * math.sin(yaw + angle1)
+            particle.pose.position.y += trans * math.sin(yaw + angle1)
 
             particle.pose.yaw += (angle1 + angle2) 
         
