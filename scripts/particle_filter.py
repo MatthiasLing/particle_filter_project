@@ -46,13 +46,12 @@ def to_rad(angle):
     return angle * math.pi / 180
 
 
-def draw_random_sample():
+def draw_random_sample(arr, n):
     """ Draws a random sample of n elements from a given list of choices and their specified probabilities.
     We recommend that you fill in this function using random_sample.
     """
-    # TODO
-    # we ended up using the choice function from random instead
-    return
+  
+    return choice(arr, n, replace=False)
 
 
 class Particle:
@@ -165,13 +164,21 @@ class ParticleFilter:
 
         res = self.map.info.resolution
         dim = self.map.info.width
+        origin = self.map.info.origin
+        origin_x, origin_y = origin.position.x, origin.position.y
 
-        res = self.map.info.resolution
-        dim = self.map.info.width
+        coords = []
 
-        for i in range(self.num_particles):
-            row = randint(0,dim) * res
-            col = randint(0,dim) * res
+        for i, v in enumerate(self.map.data):
+            if not v:
+                coords.append(i)
+
+        coords_selected = draw_random_sample(coords, self.num_particles)
+
+        for i in coords_selected:
+            row = (i//dim) * res - origin_y
+            col = (i%dim) * res - origin_x
+
             weight = 1/self.num_particles
 
             angle = randint(0,360) * math.pi/180
