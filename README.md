@@ -3,15 +3,16 @@
 
 ## Writeup
 
-The goal of this project was to correctly develop and implement a monte carlo particle localization guide to be able to determine a robots' orientation and movement within its environment. Given a map of the robots environment, the intended purpose was to use scanner readings and different movement models to translate the posible location and movement of the robot into a probobslistic area using a particle cloud. 
+The goal of this project was to correctly develop and implement a monte carlo particle localization guide to be able to determine a robot's orientation and movement within its environment. Given a map of the robots environment, the intended purpose was to use scanner readings and different movement models to translate the posible location and movement of the robot into a probobslistic area using a particle cloud. 
 
 ### High Level Description
-In order to solve the problem of particle localization we 
+In order to solve the problem of particle localization we first had to identify the location of the robot. The location of the robot was found after the resampling and normalization of a particle cloud. We first initalized a large number of particles into a 2D array that represent the robot's environment. These particles contained their own position and weights which were then updated to represent the robots movement through its environment. This update was based off the difference of the distance and orientation of the robot's old position and its new position. With the odometry topic we were provided the necessary paramaters to be able to calculate these values. Eventually, the particles were resampled and the particles with the highest weights converged to reveal the robot's true position. 
+
 ### Main Steps
 
 1. Initialization of particle cloud
-This was done in the initialize_particle_cloud function.  
-Essentially, the function reads the dimensions of the map from the self.map and randomly chooses 10,000 coordinates based on those dimensions. It then uses those coordinates multiplied by the resolution of the map to get physical coordinates for particles and randomly selects a yaw angle.  It then appends the particles each to the self.particle_cloud list and then normalizes and publishes it.
+*This was done in the initialize_particle_cloud function.  
+- Essentially, the function reads the dimensions of the map from the self.map and randomly chooses 10,000 coordinates based on those dimensions. It then uses those coordinates multiplied by the resolution of the map to get physical coordinates for particles and randomly selects a yaw angle.  It then appends the particles each to the self.particle_cloud list and then normalizes and publishes it.
 
 2. Movement model
 This was done in the update_particles_with_motion_model function. 
