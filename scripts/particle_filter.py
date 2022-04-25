@@ -346,7 +346,7 @@ class ParticleFilter:
         self.robot_estimate = pose
 
 
-    
+    # TODO OH: iterates slowly, never finished
     def update_particle_weights_with_measurement_model(self, data):
         for index, particle in enumerate(self.particle_cloud):
             for angle in data.ranges:
