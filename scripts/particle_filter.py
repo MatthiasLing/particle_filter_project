@@ -14,9 +14,10 @@ from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
 import numpy as np
 from numpy.random import random_sample, choice
+
 import math
 
-from random import randint, random
+from random import randint
 
 import random
 
@@ -51,7 +52,7 @@ def draw_random_sample(arr, n):
     We recommend that you fill in this function using random_sample.
     """
   
-    return choice(arr, n, replace=False)
+    return choice(arr, n, replace=True)
 
 
 class Particle:
@@ -92,7 +93,7 @@ class ParticleFilter:
         self.map = OccupancyGrid()
 
         # the number of particles used in the particle filter
-        self.num_particles = 1000
+        self.num_particles = 500
         # 10000
 
         # initialize the particle cloud array
@@ -199,8 +200,6 @@ class ParticleFilter:
             particle = Particle(pose, weight)
 
             self.particle_cloud.append(particle)
-
-        print(get_yaw_from_pose( self.particle_cloud[0].pose))
     
         self.normalize_particles()
         self.publish_particle_cloud()
@@ -215,8 +214,15 @@ class ParticleFilter:
             total += particle.w
 
         for index, particle in enumerate(self.particle_cloud):
-            self.particle_cloud[index].w = particle.w / total 
+            particle = self.particle_cloud[index]
+            particle.w = particle.w / total
+            self.particle_cloud[index] = particle
         print("normalized\n")
+
+        s = 0
+        for particle in self.particle_cloud:
+            s+=particle.w
+        print(s)
 
 
     def publish_particle_cloud(self):
@@ -230,13 +236,15 @@ class ParticleFilter:
             particle_cloud_pose_array.poses.append(part.pose)
 
         self.particles_pub.publish(particle_cloud_pose_array)
+        print("published\n")
 
 
     def publish_estimated_robot_pose(self):
 
         robot_pose_estimate_stamped = PoseStamped()
         robot_pose_estimate_stamped.pose = self.robot_estimate
-        robot_pose_estimate_stamped.header = Header(stamp=rospy.Time.now(), frame_id=self.map_topic)
+        # I changed this from rospy.Time.now()
+        robot_pose_estimate_stamped.header = Header(stamp=rospy.Time(0), frame_id=self.map_topic)
         self.robot_estimate_pub.publish(robot_pose_estimate_stamped)
 
 
@@ -244,10 +252,15 @@ class ParticleFilter:
 
         # TODO
 
-        probs = [particle.w for particle in self.particle_cloud]
+        probs = []
 
-        self.particle_cloud = choice(self.particle_cloud, self.num_particles, probs)
+        for particle in self.particle_cloud:
+            probs.append(particle.w)
+
+        print("resample: ")
+        self.particle_cloud = choice(self.particle_cloud, self.num_particles, p=probs, replace = True)
         print("resampled\n")
+
     def robot_scan_received(self, data):
 
         # wait until initialization is complete
@@ -317,17 +330,13 @@ class ParticleFilter:
                 self.publish_estimated_robot_pose()
 
                 self.odom_pose_last_motion_update = self.odom_pose
-
-
+                print("iteration\n")
 
     def update_estimated_robot_pose(self):
         # based on the particles within the particle cloud, update the robot pose estimate
         
         # TODO
-        print("about to update estimate\n")
         total_row = total_col = total_angle = 0
-
-        print(self.particle_cloud[:5])
 
         for particle in self.particle_cloud:
             pose = particle.pose
@@ -364,7 +373,10 @@ class ParticleFilter:
     # TODO OH: iterates slowly, never finished
     def update_particle_weights_with_measurement_model(self, data):
         for index, particle in enumerate(self.particle_cloud):
+
             for angle, measurement in enumerate(data.ranges):
+                if (angle%2):
+                    continue
                 
                 q = 1
                 x,y = particle.pose.orientation.x, particle.pose.orientation.y
@@ -385,8 +397,11 @@ class ParticleFilter:
 
                     q = q * compute_prob_zero_centered_gaussian(dist, 0.1)
 
+                    if math.isnan(q):
+                        q = 0
                     particle.w = q
                     self.particle_cloud[index] = particle
+
         print("updated particles with measurement model\n")
         self.normalize_particles()
         
@@ -415,6 +430,7 @@ class ParticleFilter:
         
         ## TODO : add noise for these three
         angle1 = math.atan2(old_y - curr_y, old_x - curr_x) - old_yaw + choice((-1,1)) * self.angle_noise
+        # angle1 = angle1 % (math.pi/180)
         trans = math.sqrt((old_x - curr_x)**2 + (old_y-curr_y)**2) + choice((-1,1)) * self.dist_noise
         angle2 = curr_yaw - old_yaw - angle1 
 
