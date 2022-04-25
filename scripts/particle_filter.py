@@ -126,6 +126,8 @@ class ParticleFilter:
         self.tf_listener = TransformListener()
         self.tf_broadcaster = TransformBroadcaster()
 
+        self.lhf = LikelihoodField()
+
         
         rospy.sleep(5)
 
@@ -164,6 +166,7 @@ class ParticleFilter:
 
         res = self.map.info.resolution
         dim = self.map.info.width
+
         origin = self.map.info.origin
         origin_x, origin_y = origin.position.x, origin.position.y
 
@@ -183,8 +186,7 @@ class ParticleFilter:
 
             angle = randint(0,360) * math.pi/180
 
-            # position.x, y, etc
-            position = Point(row, col, 0)
+            position = Point(col, row, 0)
 
             quaternion = Quaternion()
             t = quaternion_from_euler(0, 0, angle)
@@ -244,7 +246,7 @@ class ParticleFilter:
 
         probs = [particle.w for particle in self.particle_cloud]
 
-        self.particle_cloud = choice(self.num_particles, self.num_particles, probs)
+        self.particle_cloud = choice(self.particle_cloud, self.num_particles, probs)
         print("resampled\n")
     def robot_scan_received(self, data):
 
@@ -283,8 +285,8 @@ class ParticleFilter:
             self.odom_pose_last_motion_update = self.odom_pose
             return
 
-
-        if self.particle_cloud:
+# I changed this
+        if len(self.particle_cloud):
 
             # check to see if we've moved far enough to perform an update
 
@@ -322,8 +324,10 @@ class ParticleFilter:
         # based on the particles within the particle cloud, update the robot pose estimate
         
         # TODO
-
+        print("about to update estimate\n")
         total_row = total_col = total_angle = 0
+
+        print(self.particle_cloud[:5])
 
         for particle in self.particle_cloud:
             pose = particle.pose
@@ -340,19 +344,28 @@ class ParticleFilter:
         total_col = total_col / self.num_particles
         total_angle = total_angle / self.num_particles
 
-        position = Point(total_row, total_col, 0)
-        pose = Pose(position = position, orientation = quaternion_from_euler(0, 0, total_angle))
+        position = Point(total_col, total_row, 0)
+
+        quaternion = Quaternion()
+        t = quaternion_from_euler(0, 0, total_angle)
+
+        quaternion.x = t[0]
+        quaternion.y = t[1]
+        quaternion.z = t[2]
+        quaternion.w = t[3]
+
+        particle.pose.orientation = quaternion
+
+        pose = Pose(position = position, orientation = quaternion)
         
         self.robot_estimate = pose
-
+        print("updated estimate\n")
 
     # TODO OH: iterates slowly, never finished
     def update_particle_weights_with_measurement_model(self, data):
         for index, particle in enumerate(self.particle_cloud):
-            for angle in data.ranges:
+            for angle, measurement in enumerate(data.ranges):
                 
-                measurement = angle
-
                 q = 1
                 x,y = particle.pose.orientation.x, particle.pose.orientation.y
 
@@ -365,9 +378,10 @@ class ParticleFilter:
                     x = x + measurement * math.cos(theta + angle)
                     y = y + measurement * math.sin(theta + angle)
 
-                    lhf = LikelihoodField()
+                    dist = self.lhf.get_closest_obstacle_distance(x,y)
 
-                    dist = lhf.get_closest_obstacle_distance(x,y)
+                    particle.pose.orientation.x = x
+                    particle.pose.orientation.y = y
 
                     q = q * compute_prob_zero_centered_gaussian(dist, 0.1)
 
