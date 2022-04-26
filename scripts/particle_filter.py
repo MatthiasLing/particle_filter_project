@@ -70,7 +70,14 @@ class Particle:
         self.w = w
 
     def copy(self):
-        c = Particle(pose=self.pose, w=self.w)
+        
+        orientation = self.pose.orientation.copy()
+        x, y = self.pose.position.x, self.pose.position.y
+        
+        position = Point(x, y, 0)
+        new_pose = Pose(position = position, orientation = orientation)
+        w = self.weight
+        c = Particle(pose=new_pose, w=w)
         return c
 
 class ParticleFilter:
