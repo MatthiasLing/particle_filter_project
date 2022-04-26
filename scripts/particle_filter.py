@@ -94,7 +94,7 @@ class ParticleFilter:
 
         # Adds noise to measurements
         self.dist_noise = 0.05
-        self.angle_noise = to_rad(10)
+        self.angle_noise = to_rad(5)
 
         # once everything is setup initialized will be set to true
         self.initialized = False        
@@ -114,7 +114,7 @@ class ParticleFilter:
         self.map = OccupancyGrid()
 
         # the number of particles used in the particle filter
-        self.num_particles = 1000
+        self.num_particles = 750
         # 10000
 
         # initialize the particle cloud array
@@ -157,13 +157,6 @@ class ParticleFilter:
         self.initialize_particle_cloud()
 
         self.initialized = True
-
-        '''
-        
-        Assume origin is top left
-        
-        '''
-
 
 
     def get_map(self, data):
@@ -222,7 +215,7 @@ class ParticleFilter:
         # self.normalize_particles()
         self.publish_particle_cloud()
         print("Cloud published\n")
-        self.print_cloud()
+        self.update_estimated_robot_pose()
 
     def normalize_particles(self):
         # make all the particle weights sum to 1.0
@@ -394,7 +387,7 @@ class ParticleFilter:
         for index, particle in enumerate(self.particle_cloud):
 
             for angle, measurement in enumerate(data.ranges):
-                if (angle%15):
+                if (angle%12):
                    continue
                 
                 q = 1
@@ -416,8 +409,7 @@ class ParticleFilter:
 
                     if math.isnan(q):
                         q = 0
-                        particle.w = 0
-
+                    # Testing this out
                     particle.w = q
                 self.particle_cloud[index] = particle
 
