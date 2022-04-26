@@ -55,7 +55,6 @@ def draw_random_sample(arr, n):
     return choice(arr, n, replace=True)
 
 def print_particle(p):
-    return
     print(p.pose.position.x, p.pose.position.y)
     print(p.w)
 
@@ -77,7 +76,7 @@ class Particle:
 class ParticleFilter:
 
     def print_cloud(self):
-        for particle in self.particle_cloud:
+        for particle in self.particle_cloud[:5]:
             print_particle(particle)
 
     def __init__(self):
@@ -221,7 +220,7 @@ class ParticleFilter:
     def normalize_particles(self):
         # make all the particle weights sum to 1.0
         
-        # [ x ] TODO
+        print("normalizing ... ", end=" ")
         total = 0
 
         total = sum([particle.w for particle in self.particle_cloud])
@@ -235,7 +234,7 @@ class ParticleFilter:
 
 
     def publish_particle_cloud(self):
-
+        print("publishing ... ", end=" ")
         particle_cloud_pose_array = PoseArray()
         particle_cloud_pose_array.header = Header(stamp=rospy.Time.now(), frame_id=self.map_topic)
         particle_cloud_pose_array.poses
@@ -260,10 +259,9 @@ class ParticleFilter:
     def resample_particles(self):
 
         # TODO
-
+        print("resampling ... ", end=" ")
         probs = [particle.w for particle in self.particle_cloud]
 
-        print("resample: ")
         new_cloud = choice(self.particle_cloud, self.num_particles, p=probs, replace = True)
 
         for i, particle in enumerate(new_cloud):
@@ -350,7 +348,7 @@ class ParticleFilter:
     def update_estimated_robot_pose(self):
         # based on the particles within the particle cloud, update the robot pose estimate
         
-        # TODO
+        print("updating estimate ... ", end=" ")
         total_row = total_col = total_angle = 0
 
         for particle in self.particle_cloud:
@@ -387,6 +385,7 @@ class ParticleFilter:
 
     # TODO OH: iterates slowly, never finished
     def update_particle_weights_with_measurement_model(self, data):
+        print("updating with measurement model ... ", end=" ")
         for index, particle in enumerate(self.particle_cloud):
 
             for angle, measurement in enumerate(data.ranges):
@@ -414,7 +413,7 @@ class ParticleFilter:
                     particle.w = q
                 self.particle_cloud[index] = particle
 
-        print("updated particles with measurement model\n")
+        print("updated with measurement model\n")
         # self.normalize_particles()
         self.print_cloud()
         
@@ -432,7 +431,7 @@ class ParticleFilter:
         
         '''
 
-        # TODO
+        print("updating with motion model ... ", end=" ")
 
         curr_x = self.odom_pose.pose.position.x
         old_x = self.odom_pose_last_motion_update.pose.position.x
@@ -467,7 +466,7 @@ class ParticleFilter:
             particle.pose.orientation = quaternion
         
             self.particle_cloud[index] = particle
-        print("updated particles with motion model\n")
+        print("updated with motion model\n")
         self.print_cloud()
 
 if __name__=="__main__":
