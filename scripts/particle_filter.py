@@ -393,7 +393,7 @@ class ParticleFilter:
                 q = 1
 
                 # gets x, y, yaw values from the particle
-                x,y = particle.pose.orientation.x, particle.pose.orientation.y
+                x,y = particle.pose.position.x, particle.pose.position.y
                 theta = get_yaw_from_pose(particle.pose)
 
                 if measurement:
@@ -438,15 +438,17 @@ class ParticleFilter:
             angle1 += noise
             trans = math.sqrt((old_x - curr_x)**2 + (old_y-curr_y)**2) 
             trans += (np.random.uniform(low = -1, high = 1) * self.dist_noise)
+           
 
             angle2 = curr_yaw - old_yaw - angle1 
-
+            
             yaw = get_yaw_from_pose(particle.pose)
             particle.pose.position.x -= trans * math.cos(yaw + angle1)
-
+           
             particle.pose.position.y -= trans * math.sin(yaw + angle1)
-
+            
             yaw += (angle1 + angle2)
+           
 
             quaternion = Quaternion()
             t = quaternion_from_euler(0, 0, yaw)
