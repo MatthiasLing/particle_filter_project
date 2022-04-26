@@ -54,6 +54,11 @@ def draw_random_sample(arr, n):
   
     return choice(arr, n, replace=True)
 
+def print_particle(p):
+    return
+    print(p.pose.position.x, p.pose.position.y)
+    print(p.w)
+
 
 class Particle:
 
@@ -65,13 +70,19 @@ class Particle:
         # particle weight
         self.w = w
 
-
+    def copy(self):
+        c = Particle(pose=self.pose, w=self.w)
+        return c
 
 class ParticleFilter:
 
+    def print_cloud(self):
+        for particle in self.particle_cloud:
+            print_particle(particle)
 
     def __init__(self):
 
+        # Adds noise to measurements
         self.dist_noise = 0.05
         self.angle_noise = to_rad(5)
 
@@ -205,24 +216,22 @@ class ParticleFilter:
         self.publish_particle_cloud()
         print("Cloud published\n")
 
+        self.print_cloud()
+
     def normalize_particles(self):
         # make all the particle weights sum to 1.0
         
         # [ x ] TODO
         total = 0
-        for particle in self.particle_cloud:
-            total += particle.w
+
+        total = sum([particle.w for particle in self.particle_cloud])
 
         for index, particle in enumerate(self.particle_cloud):
-            particle = self.particle_cloud[index]
             particle.w = particle.w / total
             self.particle_cloud[index] = particle
-        print("normalized\n")
 
-        s = 0
-        for particle in self.particle_cloud:
-            s+=particle.w
-        print(s)
+        print("normalized\n")
+        self.print_cloud()
 
 
     def publish_particle_cloud(self):
@@ -252,14 +261,20 @@ class ParticleFilter:
 
         # TODO
 
-        probs = []
-
-        for particle in self.particle_cloud:
-            probs.append(particle.w)
+        probs = [particle.w for particle in self.particle_cloud]
 
         print("resample: ")
-        self.particle_cloud = choice(self.particle_cloud, self.num_particles, p=probs, replace = True)
+        new_cloud = choice(self.particle_cloud, self.num_particles, p=probs, replace = True)
+
+        for i, particle in enumerate(new_cloud):
+            new_cloud[i] = particle.copy()
+
+        self.particle_cloud = new_cloud
+
+        self.normalize_particles()
+
         print("resampled\n")
+        self.print_cloud()
 
     def robot_scan_received(self, data):
 
@@ -375,8 +390,8 @@ class ParticleFilter:
         for index, particle in enumerate(self.particle_cloud):
 
             for angle, measurement in enumerate(data.ranges):
-                if (angle%2):
-                    continue
+                #if (angle%2):
+                   # continue
                 
                 q = 1
                 x,y = particle.pose.orientation.x, particle.pose.orientation.y
@@ -387,23 +402,21 @@ class ParticleFilter:
 
                     angle = to_rad(angle)
 
-                    x = x + measurement * math.cos(theta + angle)
-                    y = y + measurement * math.sin(theta + angle)
+                    x += measurement * math.cos(theta + angle)
+                    y += measurement * math.sin(theta + angle)
 
                     dist = self.lhf.get_closest_obstacle_distance(x,y)
-
-                    particle.pose.orientation.x = x
-                    particle.pose.orientation.y = y
 
                     q = q * compute_prob_zero_centered_gaussian(dist, 0.1)
 
                     if math.isnan(q):
                         q = 0
                     particle.w = q
-                    self.particle_cloud[index] = particle
+                self.particle_cloud[index] = particle
 
         print("updated particles with measurement model\n")
-        self.normalize_particles()
+        # self.normalize_particles()
+        self.print_cloud()
         
 
     def update_particles_with_motion_model(self):
@@ -455,7 +468,7 @@ class ParticleFilter:
         
             self.particle_cloud[index] = particle
         print("updated particles with motion model\n")
-
+        self.print_cloud()
 
 if __name__=="__main__":
     
