@@ -231,13 +231,13 @@ class ParticleFilter:
         total = 0
 
         total = sum([particle.w for particle in self.particle_cloud])
-
+        print("total ", total)
         for index, particle in enumerate(self.particle_cloud):
             particle.w = particle.w / total
             self.particle_cloud[index] = particle
 
         print("normalized\n")
-        self.print_cloud()
+        # self.print_cloud()
 
 
     def publish_particle_cloud(self):
@@ -279,7 +279,7 @@ class ParticleFilter:
         # self.normalize_particles()
 
         print("resampled\n")
-        self.print_cloud()
+        # self.print_cloud()
 
     def robot_scan_received(self, data):
 
@@ -422,7 +422,7 @@ class ParticleFilter:
 
         print("updated with measurement model\n")
         # self.normalize_particles()
-        self.print_cloud()
+        # self.print_cloud()
         
 
     def update_particles_with_motion_model(self):
@@ -433,7 +433,6 @@ class ParticleFilter:
         '''
         
         Using sample_motion_odometry function from slack
-        - starting with 0 noise
     
         
         '''
@@ -474,7 +473,7 @@ class ParticleFilter:
         
             self.particle_cloud[index] = particle
         print("updated with motion model\n")
-        self.print_cloud()
+        # self.print_cloud()
 
 if __name__=="__main__":
     
