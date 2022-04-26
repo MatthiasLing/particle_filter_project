@@ -396,8 +396,8 @@ class ParticleFilter:
         for index, particle in enumerate(self.particle_cloud):
 
             for angle, measurement in enumerate(data.ranges):
-                #if (angle%2):
-                   # continue
+                if (angle%2):
+                   continue
                 
                 q = 1
                 x,y = particle.pose.orientation.x, particle.pose.orientation.y
