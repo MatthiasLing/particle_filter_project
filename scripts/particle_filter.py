@@ -114,7 +114,7 @@ class ParticleFilter:
         self.map = OccupancyGrid()
 
         # the number of particles used in the particle filter
-        self.num_particles = 1500
+        self.num_particles = 1000
         # 10000
 
         # initialize the particle cloud array
