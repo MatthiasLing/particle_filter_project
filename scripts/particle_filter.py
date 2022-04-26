@@ -346,7 +346,7 @@ class ParticleFilter:
         # based on the particles within the particle cloud, update the robot pose estimate
         
         print("updating estimate ... ", end=" ")
-        total_row = total_col = total_angle = 0
+        total_row = total_col = total_angle = cnt = 0
 
         # Sums up the x, y, and yaw values for the particle cloud
         for particle in self.particle_cloud:
@@ -355,16 +355,18 @@ class ParticleFilter:
             y = pose.position.y
             
             angle = get_yaw_from_pose(pose)
-        
-            total_row += x
-            total_col += y
-            total_angle += angle
+            
+            if particle.w:
+                cnt += 1
+                total_row += x
+                total_col += y
+                total_angle += angle
 
 
         # takes the average x, y, and angle values
-        total_row = total_row / self.num_particles
-        total_col = total_col / self.num_particles
-        total_angle = total_angle / self.num_particles
+        total_row = total_row / cnt
+        total_col = total_col / cnt
+        total_angle = total_angle / cnt
 
         position = Point(total_col, total_row, 0)
 
