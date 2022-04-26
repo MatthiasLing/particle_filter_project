@@ -218,7 +218,7 @@ class ParticleFilter:
 
             self.particle_cloud.append(particle)
     
-        self.normalize_particles()
+        # self.normalize_particles()
         self.publish_particle_cloud()
         print("Cloud published\n")
 
@@ -276,7 +276,7 @@ class ParticleFilter:
 
         self.particle_cloud = new_cloud
 
-        self.normalize_particles()
+        # self.normalize_particles()
 
         print("resampled\n")
         self.print_cloud()
