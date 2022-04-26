@@ -20,7 +20,7 @@ In order to solve the problem of particle localization we first had to identify 
 
 3. Measurement model
 - This was in the update_particle_weights_with_measurement_model function.
-- 
+- In this function we first index into the particle cloud and iterate through the laser scan readings of the robot. Based off the laser scan readings we update the x and y location of each partile in our particle cloud using the likelihood field model and then update the weights of the particle based off a zero centered gaussian distribution. 
 
 4. Resampling
 - This was done in the resample_particles function.
@@ -36,7 +36,8 @@ In order to solve the problem of particle localization we first had to identify 
 - In this function we take the average position and orientation of the particles that are left in the particle cloud after resampling. We divide each individual x and y component by the total number of particles that we originated with as well doing the same with the yaw, which is converted from the pose structure. Thus, the position and yaw of the particle are then upated with these average values in order to dial down a more accurate estimate of the robots possible position. 
  
 8. Optimization of parameters
-- 
+- This was done in self.num_particles 
+- To optimize paramaters we lowered the number of particles that were initialized into the particle cloud. When too many partiles were initialized into the cloud i.e 1000 or more, we found that the computation load was far too significant. By lowering the particle cloud we were not only able to better visualize the convergence of the particle cloud but our code rang significantly faster without crashing out. 
 
 ### Challenges
 The hardest part was starting in many ways; our UTM was corrupted and we took some time to redownload it.  Conceptually, it was hard trying to map the theoretical idea of having coordinates and particles to the code itself, pulling those particles out of the OccupancyGrid.  Additionally, figuring out of how to implement the movement model was somewhat unintuitive as we had to understand how to move the particles geometrically according to robot movement.  Finally, one of us contracted covid, so working together remotely was hard because it made UTM run extra slowly.  
