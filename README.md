@@ -53,6 +53,10 @@ The original function we wrote analyzed the values of the OccupancyGrid.data lis
 
 * We also started early which allowed us to get conceptual questions out of the way and give us a lot of time for implementation.  In the future, this is helpful because a lot of the work in these projects relates to debugging and tweaking parameters, rather than conceptual concepts.
 
+###GIF
+- ![particle_filter1.gif](https://github.com/MatthiasLing/particle_filter_project/blob/031bf9d731d8ffe586721da50850c6a5c921e7ac/particle_localization1.gif)
+- ![particle_filter2.gif](https://github.com/MatthiasLing/particle_filter_project/blob/031bf9d731d8ffe586721da50850c6a5c921e7ac/particle_localization2.gif)
+
 ## Implementation Plan
 1. How you will initialize your particle cloud (initialize_particle_cloud)?
   * Implement: For each of the 10,000 particles we'll initialize it with its position and set a weight to 0.  Then we'll append it to the particle_cloud list within the ParticleFilter class.
