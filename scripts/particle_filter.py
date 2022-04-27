@@ -247,13 +247,13 @@ class ParticleFilter:
 
         robot_pose_estimate_stamped = PoseStamped()
         robot_pose_estimate_stamped.pose = self.robot_estimate
-        # I changed this from rospy.Time.now()
         robot_pose_estimate_stamped.header = Header(stamp=rospy.Time.now(), frame_id=self.map_topic)
         self.robot_estimate_pub.publish(robot_pose_estimate_stamped)
 
 
     def resample_particles(self):
-
+        # This function resamples the particles based off their weights
+        
         print("resampling ... ", end=" ")
 
         # list of weights for each particle
@@ -389,6 +389,7 @@ class ParticleFilter:
         for index, particle in enumerate(self.particle_cloud):
 
             for angle, measurement in enumerate(data.ranges):
+                #decreases the laser scan angles to minimize computation 
                 if (angle%12):
                    continue
                 
@@ -411,7 +412,7 @@ class ParticleFilter:
 
                     if math.isnan(q):
                         q = 0
-                    # Testing this out
+                    
                     particle.w = q
                 self.particle_cloud[index] = particle
 
@@ -423,7 +424,7 @@ class ParticleFilter:
         # all of the particles correspondingly
 
         print("updating with motion model ... ", end=" ")
-
+        
         curr_x = self.odom_pose.pose.position.x
         old_x = self.odom_pose_last_motion_update.pose.position.x
 
@@ -436,6 +437,7 @@ class ParticleFilter:
         for index, particle in enumerate(self.particle_cloud):
 
             angle1 = math.atan2(old_y - curr_y, old_x - curr_x) - old_yaw 
+            #accounts for a uniform noise value
             noise = (np.random.uniform(low = -1, high = 1) * self.angle_noise)
             angle1 += noise
             trans = math.sqrt((old_x - curr_x)**2 + (old_y-curr_y)**2) 
@@ -445,6 +447,8 @@ class ParticleFilter:
             angle2 = curr_yaw - old_yaw - angle1 
             
             yaw = get_yaw_from_pose(particle.pose)
+            #updates the particles current x and y position based off the translational and rotational changes
+            #in the robots position
             particle.pose.position.x -= trans * math.cos(yaw + angle1)
            
             particle.pose.position.y -= trans * math.sin(yaw + angle1)
